@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BitoTech TTS & STT Web App</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      color: #333;
+      transition: all 0.3s ease;
+    }
+    header {
+      background-color: #6a1b9a;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    section {
+      margin-bottom: 2rem;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 5px;
+    }
+    textarea, select, button, input {
+      margin: 0.5rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #6a1b9a;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #4a148c;
+    }
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+    footer {
+      background-color: #6a1b9a;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    .history-log {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 1rem;
+    }
+    .history-item {
+      margin: 0.5rem 0;
+      cursor: pointer;
+    }
+    .history-item:hover {
+      background-color: #eee;
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background-color: #333;
+      color: #f4f4f9;
+    }
+    .dark-mode header, .dark-mode footer {
+      background-color: #4a148c;
+    }
+    .dark-mode button {
+      background-color: #4a148c;
+    }
+    .dark-mode button:hover {
+      background-color: #6a1b9a;
+    }
+    .dark-mode section {
+      border-color: #555;
+    }
+
+    /* High Contrast Mode */
+    body.high-contrast {
+      background-color: #000;
+      color: #fff;
+    }
+    .high-contrast header, .high-contrast footer {
+      background-color: #000;
+      color: #ff0;
+    }
+    .high-contrast button {
+      background-color: #ff0;
+      color: #000;
+    }
+    .high-contrast section {
+      border-color: #fff;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      main {
+        padding: 1rem;
+      }
+      .controls {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Text-to-Speech & Speech-to-Text Tool</h1>
+    <button id="dark-mode-toggle">Dark Mode</button>
+    <button id="high-contrast-toggle">High Contrast</button>
+  </header>
+
+  <main>
+    <!-- TTS Section -->
+    <section id="tts-section">
+      <h2>Text-to-Speech (TTS)</h2>
+      <textarea id="tts-input" placeholder="Enter text to convert to speech..." rows="5" cols="50"></textarea>
+      <div class="controls">
+        <label for="language">Language:</label>
+        <select id="language">
+          <option value="en-US">English (US)</option>
+          <option value="es-ES">Spanish (ES)</option>
+          <option value="fr-FR">French (FR)</option>
+        </select>
+        <label for="translate-to">Translate To:</label>
+        <select id="translate-to">
+          <option value="en-US">English (US)</option>
+          <option value="es-ES">Spanish (ES)</option>
+          <option value="fr-FR">French (FR)</option>
+        </select>
+        <label for="voice">Voice:</label>
+        <select id="voice"></select>
+        <label for="emotion">Emotion:</label>
+        <select id="emotion">
+          <option value="neutral">Neutral</option>
+          <option value="happy">Happy</option>
+          <option value="sad">Sad</option>
+          <option value="angry">Angry</option>
+        </select>
+        <label for="rate">Rate:</label>
+        <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+        <label for="pitch">Pitch:</label>
+        <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+        <label for="volume">Volume:</label>
+        <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+        <button id="preview-voice">Preview Voice</button>
+        <button id="play-tts">Play</button>
+        <button id="pause-tts">Pause</button>
+        <button id="resume-tts">Resume</button>
+        <button id="stop-tts">Stop</button>
+        <button id="download-tts">Download Audio</button>
+        <button id="start-story">Start Story Mode</button>
+      </div>
+    </section>
+
+    <!-- STT Section -->
+    <section id="stt-section">
+      <h2>Speech-to-Text (STT)</h2>
+      <button id="start-record">Start Recording</button>
+      <button id="stop-record" disabled>Stop Recording</button>
+      <div id="transcribed-text" contenteditable="true"></div>
+      <div id="translated-text"></div>
+      <button id="copy-text">Copy Text</button>
+      <button id="start-pronunciation-game">Start Pronunciation Game</button>
+    </section>
+
+    <!-- History Log -->
+    <section id="history-section">
+      <h2>History Log</h2>
+      <div id="history-log" class="history-log"></div>
+    </section>
+
+    <!-- User Guide Section -->
+    <section id="user-guide">
+      <h2>How to Use</h2>
+      <h3>What is TTS and STT?</h3>
+      <p><strong>Text-to-Speech (TTS):</strong> Converts written text into spoken words.</p>
+      <p><strong>Speech-to-Text (STT):</strong> Converts spoken words into written text.</p>
+      <h3>How to Use TTS:</h3>
+      <ol>
+        <li>Enter text in the input box.</li>
+        <li>Select a language, translation language, voice, and emotion.</li>
+        <li>Adjust rate, pitch, and volume.</li>
+        <li>Click "Play" to hear the text or "Start Story Mode" for interactive storytelling.</li>
+        <li>Use "Pause," "Resume," and "Stop" to control playback.</li>
+        <li>Click "Download" to save the audio.</li>
+      </ol>
+      <h3>How to Use STT:</h3>
+      <ol>
+        <li>Click "Start Recording" to begin.</li>
+        <li>Speak clearly into your microphone.</li>
+        <li>Click "Stop Recording" to end.</li>
+        <li>View the transcribed and translated text.</li>
+        <li>Click "Copy" to copy the text or "Start Pronunciation Game" to practice speaking.</li>
+      </ol>
+      <h3>Tips for Best Results:</h3>
+      <p>- Speak clearly and at a moderate pace for accurate STT transcription.</p>
+      <p>- Use a high-quality microphone for better audio input.</p>
+      <p>- Experiment with emotions and voices in TTS for a unique experience.</p>
+      <h3>FAQs:</h3>
+      <p><strong>Can I use this app offline?</strong> No, an internet connection is required.</p>
+      <p><strong>What languages are supported?</strong> Multiple languages are supported.</p>
+      <p><strong>Is my data saved?</strong> No, all processing happens in real-time.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>© BitoTech TTS & STT Tool. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Core Variables
+    const ttsInput = document.getElementById('tts-input');
+    const languageSelect = document.getElementById('language');
+    const translateToSelect = document.getElementById('translate-to');
+    const voiceSelect = document.getElementById('voice');
+    const emotionSelect = document.getElementById('emotion');
+    const rateInput = document.getElementById('rate');
+    const pitchInput = document.getElementById('pitch');
+    const volumeInput = document.getElementById('volume');
+    const playButton = document.getElementById('play-tts');
+    const pauseButton = document.getElementById('pause-tts');
+    const resumeButton = document.getElementById('resume-tts');
+    const stopButton = document.getElementById('stop-tts');
+    const previewButton = document.getElementById('preview-voice');
+    const downloadButton = document.getElementById('download-tts');
+    const startStoryButton = document.getElementById('start-story');
+    const startRecordButton = document.getElementById('start-record');
+    const stopRecordButton = document.getElementById('stop-record');
+    const transcribedText = document.getElementById('transcribed-text');
+    const translatedText = document.getElementById('translated-text');
+    const copyButton = document.getElementById('copy-text');
+    const startGameButton = document.getElementById('start-pronunciation-game');
+    const historyLog = document.getElementById('history-log');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const highContrastToggle = document.getElementById('high-contrast-toggle');
+
+    let utterance = new SpeechSynthesisUtterance();
+    let voices = [];
+    let history = [];
+
+    // Accessibility and Themes
+    darkModeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
+    highContrastToggle.addEventListener('click', () => {
+      document.body.classList.toggle('high-contrast');
+    });
+
+    // TTS Functionality
+    function populateVoices() {
+      voices = window.speechSynthesis.getVoices();
+      voiceSelect.innerHTML = voices
+        .filter(voice => voice.lang.startsWith(languageSelect.value))
+        .map(voice => `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`)
+        .join('');
+    }
+    languageSelect.addEventListener('change', populateVoices);
+    window.speechSynthesis.onvoiceschanged = populateVoices;
+
+    // Simulate Translation (Placeholder for real API)
+    function translateText(text, fromLang, toLang) {
+      // Replace with actual API call (e.g., Google Translate API)
+      return `Translated: ${text} (from ${fromLang} to ${toLang})`;
+    }
+
+    function applyEmotion(emotion) {
+      switch (emotion) {
+        case 'happy':
+          rateInput.value = 1.2;
+          pitchInput.value = 1.2;
+          break;
+        case 'sad':
+          rateInput.value = 0.8;
+          pitchInput.value = 0.8;
+          break;
+        case 'angry':
+          rateInput.value = 1.5;
+          pitchInput.value = 1.1;
+          break;
+        default:
+          rateInput.value = 1;
+          pitchInput.value = 1;
+      }
+    }
+
+    playButton.addEventListener('click', () => {
+      let text = ttsInput.value;
+      const translateTo = translateToSelect.value;
+      if (languageSelect.value !== translateTo) {
+        text = translateText(text, languageSelect.value, translateTo);
+      }
+      applyEmotion(emotionSelect.value);
+      utterance.text = text;
+      utterance.lang = translateTo;
+      utterance.voice = voices.find(voice => voice.name === voiceSelect.value);
+      utterance.rate = parseFloat(rateInput.value);
+      utterance.pitch = parseFloat(pitchInput.value);
+      utterance.volume = parseFloat(volumeInput.value);
+      window.speechSynthesis.speak(utterance);
+      addToHistory(`TTS: ${text}`);
+    });
+
+    pauseButton.addEventListener('click', () => window.speechSynthesis.pause());
+    resumeButton.addEventListener('click', () => window.speechSynthesis.resume());
+    stopButton.addEventListener('click', () => window.speechSynthesis.cancel());
+
+    previewButton.addEventListener('click', () => {
+      applyEmotion(emotionSelect.value);
+      utterance.text = "This is a preview of the selected voice.";
+      utterance.lang = languageSelect.value;
+      utterance.voice = voices.find(voice => voice.name === voiceSelect.value);
+      utterance.rate = parseFloat(rateInput.value);
+      utterance.pitch = parseFloat(pitchInput.value);
+      utterance.volume = parseFloat(volumeInput.value);
+      window.speechSynthesis.speak(utterance);
+    });
+
+    downloadButton.addEventListener('click', () => {
+      const text = ttsInput.value || "Please enter text.";
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = translateToSelect.value;
+      utterance.voice = voices.find(voice => voice.name === voiceSelect.value);
+      applyEmotion(emotionSelect.value);
+      utterance.rate = parseFloat(rateInput.value);
+      utterance.pitch = parseFloat(pitchInput.value);
+      utterance.volume = parseFloat(volumeInput.value);
+
+      const destination = audioContext.createMediaStreamDestination();
+      const mediaRecorder = new MediaRecorder(destination.stream);
+      const chunks = [];
+
+      mediaRecorder.ondataavailable = (event) => chunks.push(event.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'speech.wav';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      mediaRecorder.start();
+      window.speechSynthesis.speak(utterance);
+      utterance.onend = () => mediaRecorder.stop();
+    });
+
+    // Interactive Storytelling
+    const story = [
+      { text: "Once upon a time, in a distant land, there was a brave knight.", question: "What should the knight do next? Say 'explore' or 'rest'." },
+      { text: "The knight explored a dark forest and found a hidden cave.", question: "Should the knight enter the cave? Say 'yes' or 'no'." },
+      { text: "Inside the cave, the knight found a treasure chest!", end: true }
+    ];
+    let storyIndex = 0;
+
+    startStoryButton.addEventListener('click', () => {
+      storyIndex = 0;
+      playStory();
+    });
+
+    function playStory() {
+      if (storyIndex >= story.length) return;
+      const part = story[storyIndex];
+      utterance.text = part.text + (part.question ? " " + part.question : "");
+      utterance.lang = languageSelect.value;
+      utterance.voice = voices.find(voice => voice.name === voiceSelect.value);
+      window.speechSynthesis.speak(utterance);
+      if (part.question) {
+        utterance.onend = () => {
+          startRecordButton.click();
+          stopRecordButton.addEventListener('click', handleStoryResponse, { once: true });
+        };
+      } else {
+        storyIndex++;
+        utterance.onend = playStory;
+      }
+    }
+
+    function handleStoryResponse() {
+      const response = transcribedText.innerText.toLowerCase();
+      if (storyIndex === 0 && response.includes('explore')) storyIndex++;
+      else if (storyIndex === 1 && response.includes('yes')) storyIndex++;
+      playStory();
+    }
+
+    // STT Functionality
+    let recognition;
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = languageSelect.value;
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        transcribedText.innerText = transcript;
+        translatedText.innerText = translateText(transcript, languageSelect.value, translateToSelect.value);
+        addToHistory(`STT: ${transcript}`);
+      };
+
+      startRecordButton.addEventListener('click', () => {
+        recognition.start();
+        startRecordButton.disabled = true;
+        stopRecordButton.disabled = false;
+      });
+
+      stopRecordButton.addEventListener('click', () => {
+        recognition.stop();
+        startRecordButton.disabled = false;
+        stopRecordButton.disabled = true;
+      });
+    } else {
+      alert("Speech recognition not supported in this browser.");
+    }
+
+    copyButton.addEventListener('click', () => {
+      navigator.clipboard.writeText(transcribedText.innerText);
+      alert("Text copied to clipboard!");
+    });
+
+    // Gamification: Pronunciation Challenge
+    const phrases = ["Hello world", "How are you", "Good morning"];
+    let currentPhraseIndex = 0;
+
+    startGameButton.addEventListener('click', () => {
+      currentPhraseIndex = 0;
+      playPronunciationGame();
+    });
+
+    function playPronunciationGame() {
+      if (currentPhraseIndex >= phrases.length) {
+        alert("Game Over! Well done!");
+        return;
+      }
+      utterance.text = `Please say: ${phrases[currentPhraseIndex]}`;
+      window.speechSynthesis.speak(utterance);
+      utterance.onend = () => {
+        startRecordButton.click();
+        stopRecordButton.addEventListener('click', checkPronunciation, { once: true });
+      };
+    }
+
+    function checkPronunciation() {
+      const spoken = transcribedText.innerText.toLowerCase();
+      const expected = phrases[currentPhraseIndex].toLowerCase();
+      const accuracy = spoken.includes(expected) ? "Great job!" : "Try again!";
+      alert(`You said: "${spoken}"\nExpected: "${expected}"\n${accuracy}`);
+      currentPhraseIndex++;
+      playPronunciationGame();
+    }
+
+    // History Log
+    function addToHistory(entry) {
+      history.push(entry);
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerText = entry;
+      div.addEventListener('click', () => {
+        if (entry.startsWith('TTS:')) ttsInput.value = entry.slice(4);
+        else if (entry.startsWith('STT:')) transcribedText.innerText = entry.slice(4);
+      });
+      historyLog.appendChild(div);
+    }
+  </script>
+</body>
+</html>
